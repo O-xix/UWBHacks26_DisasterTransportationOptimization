@@ -20,9 +20,10 @@ interface Props {
   status: SimulationStatus
   onChange: (config: SimulationConfig) => void
   onRun: () => void
+  onAbout: () => void
 }
 
-export default function ParameterPanel({ config, status, onChange, onRun }: Props) {
+export default function ParameterPanel({ config, status, onChange, onRun, onAbout }: Props) {
   const { disaster, origin } = config
 
   const handleTypeChange = (type: DisasterType) => {
@@ -36,7 +37,15 @@ export default function ParameterPanel({ config, status, onChange, onRun }: Prop
   return (
     <div className="w-80 h-full bg-gray-900 text-gray-100 flex flex-col overflow-y-auto border-r border-gray-700 shrink-0">
       <div className="p-4 border-b border-gray-700">
-        <h1 className="text-lg font-bold text-white">Disaster Transit Sim</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold text-white">Disaster Transit Sim</h1>
+          <button
+            onClick={onAbout}
+            className="text-xs text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
+          >
+            About
+          </button>
+        </div>
         <p className="text-xs text-gray-400 mt-1">Click the map to place the disaster origin</p>
       </div>
 

@@ -25,11 +25,14 @@ export default function App() {
   const [config, setConfig] = useState<SimulationConfig>(defaultConfig)
   const [showDepots, setShowDepots] = useState(true)
   const [showRoutes, setShowRoutes] = useState(true)
+  const [aboutOpen, setAboutOpen] = useState(false)
   const sim = useSimulation(config)
+  const narration = useNarration()
 
   function handleConfigChange(next: SimulationConfig) {
     setConfig(next)
     sim.reset()
+    narration.dismiss()
   }
 
   const hasSimData = sim.frames.length > 0 || sim.depots.length > 0
@@ -41,6 +44,7 @@ export default function App() {
         status={sim.status}
         onChange={handleConfigChange}
         onRun={sim.run}
+        onAbout={() => setAboutOpen(true)}
       />
 
       <div className="flex-1 relative">
@@ -89,9 +93,15 @@ export default function App() {
         )}
 
         {sim.frames.length > 0 && (
-          <PlaybackControls sim={sim} />
+          <PlaybackControls
+            sim={sim}
+            narration={narration}
+            disasterType={config.disaster.type}
+          />
         )}
       </div>
+
+      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
     </div>
   )
 }
