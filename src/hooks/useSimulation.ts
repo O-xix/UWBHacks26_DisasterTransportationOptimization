@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { SimulationConfig, SimulationStatus, SimulationFrame, SimulationResponse } from '../types/simulation'
+import type {
+  SimulationConfig, SimulationStatus,
+  SimulationFrame, SimulationResponse, DepotInfo,
+} from '../types/simulation'
 
 const API_BASE = 'http://localhost:8000'
-const MS_PER_FRAME_AT_1X = 800   // ~0.8s per frame at 1x speed
+const MS_PER_FRAME_AT_1X = 800
 
 export interface SimulationHandle {
   status: SimulationStatus
@@ -11,6 +14,7 @@ export interface SimulationHandle {
   currentFrameIdx: number
   speed: number
   error: string | null
+  depots: DepotInfo[]
   run: () => Promise<void>
   pause: () => void
   resume: () => void
@@ -21,6 +25,7 @@ export interface SimulationHandle {
 export function useSimulation(config: SimulationConfig): SimulationHandle {
   const [status, setStatus] = useState<SimulationStatus>('idle')
   const [frames, setFrames] = useState<SimulationFrame[]>([])
+  const [depots, setDepots] = useState<DepotInfo[]>([])
   const [currentFrameIdx, setCurrentFrameIdx] = useState(0)
   const [speed, setSpeed] = useState(1)
   const [error, setError] = useState<string | null>(null)
@@ -33,7 +38,6 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     }
   }
 
-  // Advance frames while running
   useEffect(() => {
     if (status !== 'running' || frames.length === 0) {
       clearTicker()
@@ -57,6 +61,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     clearTicker()
     setError(null)
     setFrames([])
+    setDepots([])
     setCurrentFrameIdx(0)
     setStatus('loading')
 
@@ -69,6 +74,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
       if (!res.ok) throw new Error(`Server error ${res.status}`)
       const data: SimulationResponse = await res.json()
       setFrames(data.frames)
+      setDepots(data.depots ?? [])
       setStatus('running')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error')
@@ -76,16 +82,12 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     }
   }, [config])
 
-  const pause = useCallback(() => {
-    clearTicker()
-    setStatus('paused')
-  }, [])
-
+  const pause  = useCallback(() => { clearTicker(); setStatus('paused') }, [])
   const resume = useCallback(() => setStatus('running'), [])
-
-  const reset = useCallback(() => {
+  const reset  = useCallback(() => {
     clearTicker()
     setFrames([])
+    setDepots([])
     setCurrentFrameIdx(0)
     setStatus('idle')
     setError(null)
@@ -98,6 +100,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     currentFrameIdx,
     speed,
     error,
+    depots,
     run,
     pause,
     resume,

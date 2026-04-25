@@ -2,23 +2,22 @@ import type { DisasterParams } from './disaster'
 
 export interface SimulationConfig {
   disaster: DisasterParams
-  origin: [number, number] | null   // [lat, lng]
-  timeOfDay: number                 // 0–23
-  dayOfWeek: number                 // 0–6 (Sun–Sat)
-  busCount: number                  // 5–100
-  simulationDuration: number        // minutes, 30–240
+  origin: [number, number] | null
+  timeOfDay: number
+  dayOfWeek: number
+  busCount: number
+  simulationDuration: number
 }
 
 export type SimulationStatus = 'idle' | 'loading' | 'running' | 'paused' | 'complete'
-
-// --- API response types (mirror backend Pydantic models) ---
 
 export interface BusState {
   id: number
   lat: number
   lng: number
-  status: 'idle' | 'moving' | 'loading' | 'returning'
+  status: 'idle' | 'moving' | 'loading' | 'returning' | 'rerouting'
   routeSafety: 'green' | 'yellow' | 'red'
+  routePolyline: [number, number][]
 }
 
 export interface HubState {
@@ -29,6 +28,14 @@ export interface HubState {
   capacity: number
   current: number
   status: 'open' | 'filling' | 'full' | 'closed'
+}
+
+export interface DepotInfo {
+  id: string
+  lat: number
+  lng: number
+  name: string
+  busCount: number
 }
 
 export interface SimulationFrame {
@@ -43,4 +50,5 @@ export interface SimulationResponse {
   frames: SimulationFrame[]
   frameIntervalMinutes: number
   totalDuration: number
+  depots: DepotInfo[]
 }

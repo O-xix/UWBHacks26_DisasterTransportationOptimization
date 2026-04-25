@@ -1,10 +1,12 @@
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { SimulationConfig, SimulationFrame } from '../../types/simulation'
+import type { SimulationConfig, SimulationFrame, DepotInfo } from '../../types/simulation'
 import SpreadLayer from './SpreadLayer'
 import BusLayer from './BusLayer'
 import HubLayer from './HubLayer'
+import RouteLayer from './RouteLayer'
+import DepotLayer from './DepotLayer'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -23,10 +25,13 @@ function ClickHandler({ onOriginSet }: { onOriginSet: (pos: [number, number]) =>
 interface Props {
   config: SimulationConfig
   currentFrame: SimulationFrame | null
+  depots: DepotInfo[]
+  showDepots: boolean
+  showRoutes: boolean
   onOriginSet: (origin: [number, number]) => void
 }
 
-export default function MapView({ config, currentFrame, onOriginSet }: Props) {
+export default function MapView({ config, currentFrame, depots, showDepots, showRoutes, onOriginSet }: Props) {
   return (
     <MapContainer
       center={[37.5, -119.5]}
@@ -40,12 +45,15 @@ export default function MapView({ config, currentFrame, onOriginSet }: Props) {
 
       <ClickHandler onOriginSet={onOriginSet} />
 
-      {/* Disaster origin marker */}
       {config.origin && <Marker position={config.origin} />}
 
-      {/* Simulation layers — only shown when a frame exists */}
+      {/* Depot origins — toggleable */}
+      {showDepots && depots.length > 0 && <DepotLayer depots={depots} />}
+
       {currentFrame && (
         <>
+          {/* Routes drawn under buses so dots sit on top */}
+          {showRoutes && <RouteLayer buses={currentFrame.buses} />}
           <SpreadLayer
             geojson={currentFrame.spreadGeoJSON}
             disasterType={config.disaster.type}

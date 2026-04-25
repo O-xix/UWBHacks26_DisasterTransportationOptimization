@@ -7,11 +7,12 @@ const SAFETY_COLOR = {
   red:    '#ef4444',
 }
 
-const STATUS_LABEL = {
+const STATUS_LABEL: Record<BusState['status'], string> = {
   idle:      'Idle',
   moving:    'En route',
   loading:   'Loading',
   returning: 'Returning',
+  rerouting: 'Rerouting',
 }
 
 interface Props {
