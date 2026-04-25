@@ -1,1 +1,0 @@
-# UWBHacks26_DisasterTransportationOptimization
