@@ -1,54 +1,67 @@
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { SimulationConfig } from '../../types/simulation'
+import type { SimulationConfig, SimulationFrame, DepotInfo } from '../../types/simulation'
+import SpreadLayer from './SpreadLayer'
+import BusLayer from './BusLayer'
+import HubLayer from './HubLayer'
+import RouteLayer from './RouteLayer'
+import DepotLayer from './DepotLayer'
 
-// Fix Vite + Leaflet default marker icon
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
-
-const disasterIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  className: 'disaster-marker',
+  iconUrl:       'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
 function ClickHandler({ onOriginSet }: { onOriginSet: (pos: [number, number]) => void }) {
   useMapEvents({
-    click(e) {
-      onOriginSet([e.latlng.lat, e.latlng.lng])
-    },
+    click(e) { onOriginSet([e.latlng.lat, e.latlng.lng]) },
   })
   return null
 }
 
 interface Props {
   config: SimulationConfig
+  currentFrame: SimulationFrame | null
+  depots: DepotInfo[]
+  showDepots: boolean
+  showRoutes: boolean
   onOriginSet: (origin: [number, number]) => void
 }
 
-export default function MapView({ config, onOriginSet }: Props) {
+export default function MapView({ config, currentFrame, depots, showDepots, showRoutes, onOriginSet }: Props) {
   return (
     <MapContainer
       center={[37.5, -119.5]}
       zoom={6}
       style={{ height: '100%', width: '100%' }}
-      zoomControl={true}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
       <ClickHandler onOriginSet={onOriginSet} />
-      {config.origin && (
-        <Marker position={config.origin} icon={disasterIcon} />
+
+      {config.origin && <Marker position={config.origin} />}
+
+      {/* Depot origins — toggleable */}
+      {showDepots && depots.length > 0 && <DepotLayer depots={depots} />}
+
+      {currentFrame && (
+        <>
+          {/* Routes drawn under buses so dots sit on top */}
+          {showRoutes && <RouteLayer buses={currentFrame.buses} />}
+          <SpreadLayer
+            geojson={currentFrame.spreadGeoJSON}
+            disasterType={config.disaster.type}
+            frameKey={currentFrame.t}
+          />
+          <HubLayer hubs={currentFrame.hubs} />
+          <BusLayer buses={currentFrame.buses} />
+        </>
       )}
     </MapContainer>
   )
