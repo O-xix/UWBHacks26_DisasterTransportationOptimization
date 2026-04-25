@@ -26,6 +26,7 @@ export default function App() {
   const [showDepots, setShowDepots] = useState(true)
   const [showRoutes, setShowRoutes] = useState(true)
   const sim = useSimulation(config)
+  const narration = useNarration()
 
   function handleConfigChange(next: SimulationConfig) {
     setConfig(next)
@@ -89,7 +90,11 @@ export default function App() {
         )}
 
         {sim.frames.length > 0 && (
-          <PlaybackControls sim={sim} />
+          <PlaybackControls
+            sim={sim}
+            narration={narration}
+            disasterType={config.disaster.type}
+          />
         )}
       </div>
     </div>
