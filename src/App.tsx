@@ -3,6 +3,8 @@ import MapView from './components/Map/MapView'
 import ParameterPanel from './components/ParameterPanel/ParameterPanel'
 import PlaybackControls from './components/PlaybackControls'
 import AboutModal from './components/AboutModal'
+import LocationSearch from './components/LocationSearch'
+import PresetSelector from './components/PresetSelector'
 import { useSimulation } from './hooks/useSimulation'
 import { useNarration } from './hooks/useNarration'
 import type { SimulationConfig } from './types/simulation'
@@ -19,18 +21,39 @@ const defaultConfig: SimulationConfig = {
   dayOfWeek: 2,
   busCount: 20,
   simulationDuration: 120,
+  presetId: null,
+  warningMinutes: 0,
 }
 
 export default function App() {
   const [config, setConfig] = useState<SimulationConfig>(defaultConfig)
+  const [showPresetSelector, setShowPresetSelector] = useState(true)
   const [showDepots, setShowDepots] = useState(true)
   const [showRoutes, setShowRoutes] = useState(true)
+  const [aboutOpen, setAboutOpen] = useState(false)
+  const [flyTo, setFlyTo] = useState<[number, number] | null>(null)
   const sim = useSimulation(config)
   const narration = useNarration()
+
+  const isActive = sim.status === 'loading' || sim.status === 'running' || sim.status === 'paused'
 
   function handleConfigChange(next: SimulationConfig) {
     setConfig(next)
     sim.reset()
+    narration.dismiss()
+  }
+
+  function handlePresetSelect(next: SimulationConfig) {
+    setConfig(next)
+    sim.reset()
+    narration.dismiss()
+    setShowPresetSelector(false)
+    if (next.origin) setFlyTo(next.origin)
+  }
+
+  function handleStop() {
+    sim.reset()
+    narration.dismiss()
   }
 
   const hasSimData = sim.frames.length > 0 || sim.depots.length > 0
@@ -42,6 +65,9 @@ export default function App() {
         status={sim.status}
         onChange={handleConfigChange}
         onRun={sim.run}
+        onStop={handleStop}
+        onChangePreset={() => setShowPresetSelector(true)}
+        onAbout={() => setAboutOpen(true)}
       />
 
       <div className="flex-1 relative">
@@ -49,12 +75,21 @@ export default function App() {
           config={config}
           currentFrame={sim.currentFrame}
           depots={sim.depots}
+          evacZones={sim.evacZones}
           showDepots={showDepots}
           showRoutes={showRoutes}
-          onOriginSet={(origin) => handleConfigChange({ ...config, origin })}
+          flyTo={flyTo}
+          onOriginSet={(origin) => {
+            if (!isActive) handleConfigChange({ ...config, origin })
+          }}
         />
 
-        {/* Layer toggles — only visible once simulation data exists */}
+        {/* Search bar — top center */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000]">
+          <LocationSearch onFlyTo={pos => setFlyTo(pos)} />
+        </div>
+
+        {/* Layer toggles — top right, only after sim data */}
         {hasSimData && (
           <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-1.5">
             <ToggleButton
@@ -75,7 +110,7 @@ export default function App() {
         )}
 
         {sim.error && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-red-900/90 border border-red-700 text-red-200 text-sm px-4 py-2 rounded-lg">
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[1000] bg-red-900/90 border border-red-700 text-red-200 text-sm px-4 py-2 rounded-lg">
             {sim.error}
           </div>
         )}
@@ -97,6 +132,15 @@ export default function App() {
           />
         )}
       </div>
+
+      {showPresetSelector && (
+        <PresetSelector
+          onSelect={handlePresetSelect}
+          onCustom={() => setShowPresetSelector(false)}
+        />
+      )}
+
+      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
     </div>
   )
 }

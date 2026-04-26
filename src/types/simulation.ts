@@ -7,6 +7,8 @@ export interface SimulationConfig {
   dayOfWeek: number
   busCount: number
   simulationDuration: number
+  presetId: string | null
+  warningMinutes: number
 }
 
 export type SimulationStatus = 'idle' | 'loading' | 'running' | 'paused' | 'complete'
@@ -38,6 +40,12 @@ export interface DepotInfo {
   busCount: number
 }
 
+export interface EvacZone {
+  zone: string
+  level?: string
+  geometry: object
+}
+
 export interface SimulationFrame {
   t: number
   spreadGeoJSON: object
@@ -51,4 +59,5 @@ export interface SimulationResponse {
   frameIntervalMinutes: number
   totalDuration: number
   depots: DepotInfo[]
+  evacZones?: EvacZone[]
 }
