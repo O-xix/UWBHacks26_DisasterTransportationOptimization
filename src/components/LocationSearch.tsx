@@ -36,8 +36,8 @@ export default function LocationSearch({ onFlyTo }: Props) {
     timerRef.current = setTimeout(async () => {
       setLoading(true)
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`
-        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } })
+        const url = `http://localhost:8000/api/geocode?q=${encodeURIComponent(q)}`
+        const res = await fetch(url)
         const data: NominatimResult[] = await res.json()
         setResults(data)
         setOpen(data.length > 0)

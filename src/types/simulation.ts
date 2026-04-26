@@ -7,6 +7,8 @@ export interface SimulationConfig {
   dayOfWeek: number
   busCount: number
   simulationDuration: number
+  presetId: string | null
+  warningMinutes: number
 }
 
 export type SimulationStatus = 'idle' | 'loading' | 'running' | 'paused' | 'complete'

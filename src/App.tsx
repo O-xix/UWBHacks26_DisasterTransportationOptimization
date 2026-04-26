@@ -4,6 +4,7 @@ import ParameterPanel from './components/ParameterPanel/ParameterPanel'
 import PlaybackControls from './components/PlaybackControls'
 import AboutModal from './components/AboutModal'
 import LocationSearch from './components/LocationSearch'
+import PresetSelector from './components/PresetSelector'
 import { useSimulation } from './hooks/useSimulation'
 import { useNarration } from './hooks/useNarration'
 import type { SimulationConfig } from './types/simulation'
@@ -20,10 +21,13 @@ const defaultConfig: SimulationConfig = {
   dayOfWeek: 2,
   busCount: 20,
   simulationDuration: 120,
+  presetId: null,
+  warningMinutes: 0,
 }
 
 export default function App() {
   const [config, setConfig] = useState<SimulationConfig>(defaultConfig)
+  const [showPresetSelector, setShowPresetSelector] = useState(true)
   const [showDepots, setShowDepots] = useState(true)
   const [showRoutes, setShowRoutes] = useState(true)
   const [aboutOpen, setAboutOpen] = useState(false)
@@ -37,6 +41,14 @@ export default function App() {
     setConfig(next)
     sim.reset()
     narration.dismiss()
+  }
+
+  function handlePresetSelect(next: SimulationConfig) {
+    setConfig(next)
+    sim.reset()
+    narration.dismiss()
+    setShowPresetSelector(false)
+    if (next.origin) setFlyTo(next.origin)
   }
 
   function handleStop() {
@@ -54,6 +66,7 @@ export default function App() {
         onChange={handleConfigChange}
         onRun={sim.run}
         onStop={handleStop}
+        onChangePreset={() => setShowPresetSelector(true)}
         onAbout={() => setAboutOpen(true)}
       />
 
@@ -118,6 +131,13 @@ export default function App() {
           />
         )}
       </div>
+
+      {showPresetSelector && (
+        <PresetSelector
+          onSelect={handlePresetSelect}
+          onCustom={() => setShowPresetSelector(false)}
+        />
+      )}
 
       {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
     </div>
