@@ -124,8 +124,8 @@ const PRESETS: PresetDef[] = [
 function defaultDisasterFor(type: DisasterType) {
   switch (type) {
     case 'wildfire':  return { type: 'wildfire' as const, windSpeed: 25, windDirection: 270, spreadRate: 1.0 }
-    case 'hurricane': return { type: 'hurricane' as const, category: 4, movementDirection: 315, movementSpeed: 12 }
-    case 'tornado':   return { type: 'tornado' as const, efScale: 4, pathDirection: 45, speed: 55, width: 1600 }
+    case 'hurricane': return { type: 'hurricane' as const, category: 4 as const, movementDirection: 315, movementSpeed: 12 }
+    case 'tornado':   return { type: 'tornado' as const, efScale: 4 as const, pathDirection: 45, speed: 55, width: 1600 }
     case 'earthquake': return { type: 'earthquake' as const, magnitude: 6.5, depth: 10 }
   }
 }

@@ -9,8 +9,8 @@ import EarthquakeParamsPanel from './EarthquakeParams'
 const defaultParamsFor = (type: DisasterType): DisasterParams => {
   switch (type) {
     case 'wildfire':   return { type: 'wildfire',   windSpeed: 20, windDirection: 270, spreadRate: 1.0 }
-    case 'tornado':    return { type: 'tornado',    efScale: 2, pathDirection: 45, speed: 30, width: 400 }
-    case 'hurricane':  return { type: 'hurricane',  category: 3, movementDirection: 315, movementSpeed: 12 }
+    case 'tornado':    return { type: 'tornado',    efScale: 2 as const, pathDirection: 45, speed: 30, width: 400 }
+    case 'hurricane':  return { type: 'hurricane',  category: 3 as const, movementDirection: 315, movementSpeed: 12 }
     case 'earthquake': return { type: 'earthquake', magnitude: 6.5, depth: 15 }
   }
 }

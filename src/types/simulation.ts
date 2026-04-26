@@ -43,7 +43,7 @@ export interface DepotInfo {
 export interface EvacZone {
   zone: string
   level?: string
-  geometry: object
+  geometry: Record<string, unknown>
 }
 
 export interface SimulationFrame {
