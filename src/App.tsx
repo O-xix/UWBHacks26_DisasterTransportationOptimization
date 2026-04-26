@@ -1,20 +1,19 @@
 import { useState } from 'react'
 import MapView from './components/Map/MapView'
 import ParameterPanel from './components/ParameterPanel/ParameterPanel'
-import type { SimulationConfig, SimulationStatus } from './types/simulation'
+import type { SimulationConfig } from './types/simulation'
+import type { SimulationStatus } from './types/simulation'
 
 const defaultConfig: SimulationConfig = {
   disaster: {
     type: 'wildfire',
-    windSpeed: 20,
-    windDirection: 270,
-    spreadRate: 1.0,
+    windSpeed: 50,
+    windDirection: 45,
+    spreadRate: 3.0,
   },
-  origin: null,
-  timeOfDay: 14,
+  origin: [34.052, -118.530],
   dayOfWeek: 2,
-  busCount: 20,
-  simulationDuration: 120,
+  simulationDuration: 720,
 }
 
 export default function App() {
