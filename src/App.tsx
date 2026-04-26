@@ -75,6 +75,7 @@ export default function App() {
           config={config}
           currentFrame={sim.currentFrame}
           depots={sim.depots}
+          evacZones={sim.evacZones}
           showDepots={showDepots}
           showRoutes={showRoutes}
           flyTo={flyTo}

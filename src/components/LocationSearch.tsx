@@ -36,7 +36,8 @@ export default function LocationSearch({ onFlyTo }: Props) {
     timerRef.current = setTimeout(async () => {
       setLoading(true)
       try {
-        const url = `http://localhost:8000/api/geocode?q=${encodeURIComponent(q)}`
+        const base = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+        const url = `${base}/api/geocode?q=${encodeURIComponent(q)}`
         const res = await fetch(url)
         const data: NominatimResult[] = await res.json()
         setResults(data)

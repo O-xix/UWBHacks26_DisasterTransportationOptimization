@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type {
   SimulationConfig, SimulationStatus,
-  SimulationFrame, SimulationResponse, DepotInfo,
+  SimulationFrame, SimulationResponse, DepotInfo, EvacZone,
 } from '../types/simulation'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
 const MS_PER_FRAME_AT_1X = 800
 
 export interface SimulationHandle {
@@ -15,6 +15,7 @@ export interface SimulationHandle {
   speed: number
   error: string | null
   depots: DepotInfo[]
+  evacZones: EvacZone[]
   run: () => Promise<void>
   pause: () => void
   resume: () => void
@@ -28,6 +29,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
   const [status, setStatus] = useState<SimulationStatus>('idle')
   const [frames, setFrames] = useState<SimulationFrame[]>([])
   const [depots, setDepots] = useState<DepotInfo[]>([])
+  const [evacZones, setEvacZones] = useState<EvacZone[]>([])
   const [currentFrameIdx, setCurrentFrameIdx] = useState(0)
   const [speed, setSpeed] = useState(1)
   const [error, setError] = useState<string | null>(null)
@@ -66,6 +68,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     setError(null)
     setFrames([])
     setDepots([])
+    setEvacZones([])
     setCurrentFrameIdx(0)
     setStatus('loading')
 
@@ -79,6 +82,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
       const data: SimulationResponse = await res.json()
       setFrames(data.frames)
       setDepots(data.depots ?? [])
+      setEvacZones(data.evacZones ?? [])
       setStatus('running')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error')
@@ -92,6 +96,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     clearTicker()
     setFrames([])
     setDepots([])
+    setEvacZones([])
     setCurrentFrameIdx(0)
     setStatus('idle')
     setError(null)
@@ -117,6 +122,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     speed,
     error,
     depots,
+    evacZones,
     run,
     pause,
     resume,

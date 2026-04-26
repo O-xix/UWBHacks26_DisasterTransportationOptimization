@@ -40,6 +40,12 @@ export interface DepotInfo {
   busCount: number
 }
 
+export interface EvacZone {
+  zone: string
+  level?: string
+  geometry: object
+}
+
 export interface SimulationFrame {
   t: number
   spreadGeoJSON: object
@@ -53,4 +59,5 @@ export interface SimulationResponse {
   frameIntervalMinutes: number
   totalDuration: number
   depots: DepotInfo[]
+  evacZones?: EvacZone[]
 }

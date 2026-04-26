@@ -2,12 +2,14 @@ import { useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import type { SimulationConfig, SimulationFrame, DepotInfo } from '../../types/simulation'
+import type { SimulationConfig, SimulationFrame, DepotInfo, EvacZone } from '../../types/simulation'
 import SpreadLayer from './SpreadLayer'
 import BusLayer from './BusLayer'
 import HubLayer from './HubLayer'
 import RouteLayer from './RouteLayer'
 import DepotLayer from './DepotLayer'
+import MapLegend from './MapLegend'
+import EvacZoneLayer from './EvacZoneLayer'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -35,13 +37,14 @@ interface Props {
   config: SimulationConfig
   currentFrame: SimulationFrame | null
   depots: DepotInfo[]
+  evacZones: EvacZone[]
   showDepots: boolean
   showRoutes: boolean
   flyTo: [number, number] | null
   onOriginSet: (origin: [number, number]) => void
 }
 
-export default function MapView({ config, currentFrame, depots, showDepots, showRoutes, flyTo, onOriginSet }: Props) {
+export default function MapView({ config, currentFrame, depots, evacZones, showDepots, showRoutes, flyTo, onOriginSet }: Props) {
   return (
     <MapContainer
       center={[37.5, -119.5]}
@@ -60,6 +63,8 @@ export default function MapView({ config, currentFrame, depots, showDepots, show
 
       {showDepots && depots.length > 0 && <DepotLayer depots={depots} />}
 
+      {evacZones.length > 0 && <EvacZoneLayer zones={evacZones} />}
+
       {currentFrame && (
         <>
           {showRoutes && <RouteLayer buses={currentFrame.buses} />}
@@ -70,6 +75,7 @@ export default function MapView({ config, currentFrame, depots, showDepots, show
           />
           <HubLayer hubs={currentFrame.hubs} />
           <BusLayer buses={currentFrame.buses} />
+          <MapLegend />
         </>
       )}
     </MapContainer>
