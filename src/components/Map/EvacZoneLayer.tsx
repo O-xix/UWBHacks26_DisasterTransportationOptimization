@@ -1,10 +1,5 @@
 import { GeoJSON, Tooltip } from 'react-leaflet'
-
-interface EvacZone {
-  zone: string
-  level?: string
-  geometry: GeoJSON.Geometry
-}
+import type { EvacZone } from '../../types/simulation'
 
 interface Props {
   zones: EvacZone[]
