@@ -43,7 +43,8 @@ export interface DepotInfo {
 export interface EvacZone {
   zone: string
   level?: string
-  geometry: Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  geometry: any
 }
 
 export interface SimulationFrame {
