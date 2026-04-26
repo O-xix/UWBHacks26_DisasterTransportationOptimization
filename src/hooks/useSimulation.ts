@@ -19,6 +19,8 @@ export interface SimulationHandle {
   pause: () => void
   resume: () => void
   reset: () => void
+  seek: (idx: number) => void
+  replay: () => void
   setSpeed: (s: number) => void
 }
 
@@ -30,6 +32,8 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
   const [speed, setSpeed] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const framesRef = useRef(frames)
+  framesRef.current = frames
 
   const clearTicker = () => {
     if (intervalRef.current !== null) {
@@ -45,7 +49,7 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     }
     intervalRef.current = setInterval(() => {
       setCurrentFrameIdx(prev => {
-        if (prev >= frames.length - 1) {
+        if (prev >= framesRef.current.length - 1) {
           setStatus('complete')
           return prev
         }
@@ -93,6 +97,18 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     setError(null)
   }, [])
 
+  const seek = useCallback((idx: number) => {
+    clearTicker()
+    setStatus('paused')
+    setCurrentFrameIdx(Math.max(0, Math.min(idx, framesRef.current.length - 1)))
+  }, [])
+
+  const replay = useCallback(() => {
+    clearTicker()
+    setCurrentFrameIdx(0)
+    setStatus('running')
+  }, [])
+
   return {
     status,
     frames,
@@ -105,6 +121,8 @@ export function useSimulation(config: SimulationConfig): SimulationHandle {
     pause,
     resume,
     reset,
+    seek,
+    replay,
     setSpeed,
   }
 }

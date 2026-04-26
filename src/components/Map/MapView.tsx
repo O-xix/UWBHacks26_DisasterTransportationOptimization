@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { SimulationConfig, SimulationFrame, DepotInfo } from '../../types/simulation'
@@ -22,16 +23,25 @@ function ClickHandler({ onOriginSet }: { onOriginSet: (pos: [number, number]) =>
   return null
 }
 
+function FlyToController({ pos }: { pos: [number, number] | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (pos) map.flyTo(pos, 13, { duration: 1.5 })
+  }, [pos, map])
+  return null
+}
+
 interface Props {
   config: SimulationConfig
   currentFrame: SimulationFrame | null
   depots: DepotInfo[]
   showDepots: boolean
   showRoutes: boolean
+  flyTo: [number, number] | null
   onOriginSet: (origin: [number, number]) => void
 }
 
-export default function MapView({ config, currentFrame, depots, showDepots, showRoutes, onOriginSet }: Props) {
+export default function MapView({ config, currentFrame, depots, showDepots, showRoutes, flyTo, onOriginSet }: Props) {
   return (
     <MapContainer
       center={[37.5, -119.5]}
@@ -44,15 +54,14 @@ export default function MapView({ config, currentFrame, depots, showDepots, show
       />
 
       <ClickHandler onOriginSet={onOriginSet} />
+      <FlyToController pos={flyTo} />
 
       {config.origin && <Marker position={config.origin} />}
 
-      {/* Depot origins — toggleable */}
       {showDepots && depots.length > 0 && <DepotLayer depots={depots} />}
 
       {currentFrame && (
         <>
-          {/* Routes drawn under buses so dots sit on top */}
           {showRoutes && <RouteLayer buses={currentFrame.buses} />}
           <SpreadLayer
             geojson={currentFrame.spreadGeoJSON}

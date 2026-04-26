@@ -20,11 +20,13 @@ interface Props {
   status: SimulationStatus
   onChange: (config: SimulationConfig) => void
   onRun: () => void
+  onStop: () => void
   onAbout: () => void
 }
 
-export default function ParameterPanel({ config, status, onChange, onRun, onAbout }: Props) {
+export default function ParameterPanel({ config, status, onChange, onRun, onStop, onAbout }: Props) {
   const { disaster, origin } = config
+  const locked = status === 'loading' || status === 'running' || status === 'paused'
 
   const handleTypeChange = (type: DisasterType) => {
     onChange({ ...config, disaster: defaultParamsFor(type) })
@@ -35,7 +37,7 @@ export default function ParameterPanel({ config, status, onChange, onRun, onAbou
   }
 
   return (
-    <div className="w-80 h-full bg-gray-900 text-gray-100 flex flex-col overflow-y-auto border-r border-gray-700 shrink-0">
+    <div className="w-80 h-full bg-gray-900 text-gray-100 flex flex-col border-r border-gray-700 shrink-0 relative">
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-white">Disaster Transit Sim</h1>
@@ -49,7 +51,8 @@ export default function ParameterPanel({ config, status, onChange, onRun, onAbou
         <p className="text-xs text-gray-400 mt-1">Click the map to place the disaster origin</p>
       </div>
 
-      <div className="p-4 space-y-5 flex-1">
+      {/* Parameter content — scrollable, dimmed when locked */}
+      <div className={`p-4 space-y-5 flex-1 overflow-y-auto transition-opacity ${locked ? 'opacity-40 pointer-events-none select-none' : ''}`}>
         <DisasterSelector selected={disaster.type} onChange={handleTypeChange} />
 
         {disaster.type === 'wildfire'   && <WildfireParamsPanel   params={disaster} onChange={handleDisasterChange} />}
@@ -98,17 +101,29 @@ export default function ParameterPanel({ config, status, onChange, onRun, onAbou
         </div>
       </div>
 
-      <div className="p-4 border-t border-gray-700">
-        {!origin && (
-          <p className="text-xs text-yellow-400 mb-3">Click the map to place disaster origin first</p>
+      {/* Footer button */}
+      <div className="p-4 border-t border-gray-700 shrink-0">
+        {locked ? (
+          <button
+            onClick={onStop}
+            className="w-full py-3 rounded font-semibold text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors cursor-pointer"
+          >
+            Stop Simulation
+          </button>
+        ) : (
+          <>
+            {!origin && (
+              <p className="text-xs text-yellow-400 mb-3">Click the map to place disaster origin first</p>
+            )}
+            <button
+              onClick={onRun}
+              disabled={!origin || status === 'loading'}
+              className="w-full py-3 rounded font-semibold text-sm bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              {status === 'loading' ? 'Building simulation…' : 'Run Simulation'}
+            </button>
+          </>
         )}
-        <button
-          onClick={onRun}
-          disabled={!origin || status === 'running'}
-          className="w-full py-3 rounded font-semibold text-sm bg-red-600 hover:bg-red-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors cursor-pointer"
-        >
-          {status === 'running' ? 'Simulating...' : 'Run Simulation'}
-        </button>
       </div>
     </div>
   )

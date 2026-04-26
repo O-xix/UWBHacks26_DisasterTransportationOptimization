@@ -10,18 +10,17 @@ interface Props {
 }
 
 export default function PlaybackControls({ sim, narration, disasterType }: Props) {
-  const { status, currentFrame, currentFrameIdx, frames, speed, setSpeed, pause, resume, reset } = sim
+  const { status, currentFrame, currentFrameIdx, frames, speed, setSpeed, pause, resume, seek, replay } = sim
 
-  const progressPct = frames.length > 1
-    ? (currentFrameIdx / (frames.length - 1)) * 100
-    : 0
+  const maxIdx = Math.max(0, frames.length - 1)
+  const isComplete = status === 'complete'
 
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center gap-2">
 
       {/* Narration panel */}
       {(narration.text || narration.loading) && (
-        <div className="bg-gray-900/95 border border-gray-700 rounded-xl px-4 py-3 shadow-xl backdrop-blur-sm max-w-[520px] relative">
+        <div className="bg-gray-900/95 border border-gray-700 rounded-xl px-4 py-3 shadow-xl backdrop-blur-sm max-w-[540px] relative">
           {narration.loading
             ? <p className="text-gray-400 text-xs italic">Claude is analysing the situation…</p>
             : (
@@ -39,68 +38,72 @@ export default function PlaybackControls({ sim, narration, disasterType }: Props
       )}
 
       {/* Controls bar */}
-      <div className="bg-gray-900/95 border border-gray-700 rounded-xl px-5 py-3 flex items-center gap-5 shadow-xl backdrop-blur-sm min-w-[480px]">
+      <div className="bg-gray-900/95 border border-gray-700 rounded-2xl shadow-xl backdrop-blur-sm overflow-hidden min-w-[540px]">
 
-        {/* Time */}
-        <div className="text-sm text-gray-300 w-20 shrink-0">
-          T+{currentFrame?.t ?? 0} min
-        </div>
-
-        {/* Progress bar */}
-        <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-blue-500 rounded-full transition-all duration-300"
-            style={{ width: `${progressPct}%` }}
+        {/* Scrub slider — full width */}
+        <div className="px-4 pt-3 pb-1">
+          <input
+            type="range"
+            min={0}
+            max={maxIdx}
+            value={currentFrameIdx}
+            onChange={e => seek(Number(e.target.value))}
+            className="w-full accent-blue-500 cursor-pointer h-1"
           />
         </div>
 
-        {/* Play / Pause */}
-        <button
-          onClick={status === 'running' ? pause : resume}
-          disabled={status === 'complete'}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
-          aria-label={status === 'running' ? 'Pause' : 'Play'}
-        >
-          {status === 'running' ? <PauseIcon /> : <PlayIcon />}
-        </button>
+        {/* Bottom row */}
+        <div className="px-4 pb-3 flex items-center gap-4">
 
-        {/* Speed */}
-        <div className="flex gap-1 shrink-0">
-          {SPEEDS.map(s => (
-            <button
-              key={s}
-              onClick={() => setSpeed(s)}
-              className={`px-2 py-0.5 rounded text-xs font-medium transition-colors cursor-pointer
-                ${speed === s
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-            >
-              {s}x
-            </button>
-          ))}
+          {/* Time */}
+          <div className="text-xs text-gray-400 w-16 shrink-0 tabular-nums">
+            T+{currentFrame?.t ?? 0} min
+          </div>
+
+          {/* Play / Pause / Replay */}
+          <button
+            onClick={isComplete ? replay : (status === 'running' ? pause : resume)}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-500 transition-colors cursor-pointer shrink-0"
+            aria-label={isComplete ? 'Replay' : status === 'running' ? 'Pause' : 'Play'}
+          >
+            {isComplete ? <ReplayIcon /> : status === 'running' ? <PauseIcon /> : <PlayIcon />}
+          </button>
+
+          {/* Speed */}
+          <div className="flex gap-1 shrink-0">
+            {SPEEDS.map(s => (
+              <button
+                key={s}
+                onClick={() => setSpeed(s)}
+                className={`px-2 py-0.5 rounded text-xs font-medium transition-colors cursor-pointer
+                  ${speed === s
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+
+          {/* Evacuated */}
+          <div className="flex-1 text-xs text-green-400 font-semibold text-center">
+            {(currentFrame?.evacuated ?? 0).toLocaleString()} evacuated
+          </div>
+
+          {/* Explain */}
+          <button
+            onClick={() => { if (currentFrame) narration.explain(currentFrame, disasterType) }}
+            disabled={narration.loading || !currentFrame}
+            className="text-purple-400 hover:text-purple-300 disabled:text-gray-600 disabled:cursor-not-allowed text-xs font-medium transition-colors cursor-pointer shrink-0"
+          >
+            Explain
+          </button>
+
+          {/* Completion badge */}
+          {isComplete && (
+            <span className="text-xs text-gray-500 shrink-0">Complete</span>
+          )}
         </div>
-
-        {/* Evacuated */}
-        <div className="text-sm text-green-400 font-semibold w-24 text-right shrink-0">
-          {(currentFrame?.evacuated ?? 0).toLocaleString()} out
-        </div>
-
-        {/* Explain */}
-        <button
-          onClick={() => { if (currentFrame) narration.explain(currentFrame, disasterType) }}
-          disabled={narration.loading || !currentFrame}
-          className="text-purple-400 hover:text-purple-300 disabled:text-gray-600 disabled:cursor-not-allowed text-xs font-medium transition-colors cursor-pointer shrink-0"
-        >
-          Explain
-        </button>
-
-        {/* Reset */}
-        <button
-          onClick={reset}
-          className="text-gray-500 hover:text-gray-300 text-xs transition-colors cursor-pointer shrink-0"
-        >
-          Reset
-        </button>
       </div>
     </div>
   )
@@ -108,7 +111,7 @@ export default function PlaybackControls({ sim, narration, disasterType }: Props
 
 function PlayIcon() {
   return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
       <path d="M5 3.5l8 4.5-8 4.5V3.5z" />
     </svg>
   )
@@ -116,9 +119,18 @@ function PlayIcon() {
 
 function PauseIcon() {
   return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
       <rect x="3" y="2" width="3.5" height="12" rx="1" />
       <rect x="9.5" y="2" width="3.5" height="12" rx="1" />
+    </svg>
+  )
+}
+
+function ReplayIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+      <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" />
+      <path d="M8 1.5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5H5a.5.5 0 0 1 0-1h2.5V2a.5.5 0 0 1 .5-.5z" />
     </svg>
   )
 }

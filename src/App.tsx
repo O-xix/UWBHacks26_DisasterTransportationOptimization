@@ -3,6 +3,7 @@ import MapView from './components/Map/MapView'
 import ParameterPanel from './components/ParameterPanel/ParameterPanel'
 import PlaybackControls from './components/PlaybackControls'
 import AboutModal from './components/AboutModal'
+import LocationSearch from './components/LocationSearch'
 import { useSimulation } from './hooks/useSimulation'
 import { useNarration } from './hooks/useNarration'
 import type { SimulationConfig } from './types/simulation'
@@ -26,11 +27,19 @@ export default function App() {
   const [showDepots, setShowDepots] = useState(true)
   const [showRoutes, setShowRoutes] = useState(true)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [flyTo, setFlyTo] = useState<[number, number] | null>(null)
   const sim = useSimulation(config)
   const narration = useNarration()
 
+  const isActive = sim.status === 'loading' || sim.status === 'running' || sim.status === 'paused'
+
   function handleConfigChange(next: SimulationConfig) {
     setConfig(next)
+    sim.reset()
+    narration.dismiss()
+  }
+
+  function handleStop() {
     sim.reset()
     narration.dismiss()
   }
@@ -44,6 +53,7 @@ export default function App() {
         status={sim.status}
         onChange={handleConfigChange}
         onRun={sim.run}
+        onStop={handleStop}
         onAbout={() => setAboutOpen(true)}
       />
 
@@ -54,10 +64,18 @@ export default function App() {
           depots={sim.depots}
           showDepots={showDepots}
           showRoutes={showRoutes}
-          onOriginSet={(origin) => handleConfigChange({ ...config, origin })}
+          flyTo={flyTo}
+          onOriginSet={(origin) => {
+            if (!isActive) handleConfigChange({ ...config, origin })
+          }}
         />
 
-        {/* Layer toggles — only visible once simulation data exists */}
+        {/* Search bar — top center */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000]">
+          <LocationSearch onFlyTo={pos => setFlyTo(pos)} />
+        </div>
+
+        {/* Layer toggles — top right, only after sim data */}
         {hasSimData && (
           <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-1.5">
             <ToggleButton
@@ -78,7 +96,7 @@ export default function App() {
         )}
 
         {sim.error && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-red-900/90 border border-red-700 text-red-200 text-sm px-4 py-2 rounded-lg">
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[1000] bg-red-900/90 border border-red-700 text-red-200 text-sm px-4 py-2 rounded-lg">
             {sim.error}
           </div>
         )}
